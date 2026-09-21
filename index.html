@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Pet Feeder Dashboard</title>
+  <style>
+    /* CSS: Visual Styling */
+    :root {
+      --primary-color: #4f46e5;
+      --bg-color: #f3f4f6;
+      --card-bg: #ffffff;
+      --text-color: #1f2937;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .dashboard-card {
+      background-color: var(--card-bg);
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+      padding: 30px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 5px;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      background-color: #d1fae5;
+      color: #065f46;
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 25px;
+    }
+
+    .weight-display {
+      background-color: #f9fafb;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 25px;
+    }
+
+    .weight-value {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--primary-color);
+    }
+
+    .weight-label {
+      font-size: 0.875rem;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .feed-button {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 16px 32px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      width: 100%;
+      cursor: pointer;
+      transition: transform 0.1s ease, background-color 0.2s ease;
+    }
+
+    .feed-button:hover {
+      background-color: #4338ca;
+    }
+
+    .feed-button:active {
+      transform: scale(0.98);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HTML: Page Structure -->
+  <div class="dashboard-card">
+    <h1>🐾 Smart Pet Feeder</h1>
+    <div class="status-badge" id="status">System Online</div>
+
+    <div class="weight-display">
+      <div class="weight-label">Current Bowl Weight</div>
+      <div class="weight-value"><span id="weight">120</span> <small style="font-size: 1rem;">g</small></div>
+    </div>
+
+    <button class="feed-button" onclick="triggerFeed()">Feed Now</button>
+  </div>
+
+  <!-- JAVASCRIPT: Interactive Logic -->
+  <script>
+    function triggerFeed() {
+      const statusElement = document.getElementById('status');
+      statusElement.innerText = 'Dispensing Food...';
+      statusElement.style.backgroundColor = '#fef3c7';
+      statusElement.style.color = '#92400e';
+
+      // Simulated dispense trigger (Later we will connect this to Firebase/ESP32)
+      setTimeout(() => {
+        statusElement.innerText = 'System Online';
+        statusElement.style.backgroundColor = '#d1fae5';
+        statusElement.style.color = '#065f46';
+        alert('Feed cycle requested!');
+      }, 3000);
+    }
+  </script>
+
+</body>
+</html>
