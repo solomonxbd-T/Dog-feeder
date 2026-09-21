@@ -108,10 +108,6 @@
       box-sizing: border-box;
     }
 
-    .select-dropdown:focus {
-      border-color: var(--primary-color);
-    }
-
     .dispense-button {
       background-color: var(--primary-color);
       color: #ffffff;
@@ -123,15 +119,66 @@
       width: 100%;
       cursor: pointer;
       transition: background-color 0.2s ease;
-      margin-top: 8px;
+      margin-top: 4px;
     }
 
     .dispense-button:hover {
       background-color: var(--primary-hover);
     }
 
-    .dispense-button:active {
-      transform: scale(0.99);
+    .secondary-button {
+      background-color: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      width: 100%;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .secondary-button:hover {
+      background-color: #f8fafc;
+      color: var(--text-main);
+    }
+
+    /* Log View Styling */
+    .log-container {
+      display: none;
+      text-align: left;
+    }
+
+    .log-list {
+      list-style: none;
+      padding: 0;
+      margin: 16px 0;
+      max-height: 240px;
+      overflow-y: auto;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background-color: #f8fafc;
+    }
+
+    .log-item {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.85rem;
+      display: flex;
+      justify-content: space-between;
+      color: var(--text-main);
+    }
+
+    .log-item:last-child {
+      border-bottom: none;
+    }
+
+    .log-empty {
+      padding: 16px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.85rem;
     }
   </style>
 </head>
@@ -146,7 +193,8 @@
       <div class="weight-value"><span id="weight">0</span> <small style="font-size: 0.9rem; font-weight: 400; color: var(--text-muted);">g</small></div>
     </div>
 
-    <div class="control-group">
+    <!-- Main Controls View -->
+    <div id="controlsView" class="control-group">
       <label class="select-label" for="revSelect">Portion Size (Revolutions):</label>
       <select id="revSelect" class="select-dropdown">
         <option value="1">1 Revolution</option>
@@ -156,13 +204,74 @@
       </select>
 
       <button class="dispense-button" onclick="triggerDispense()">Dispense</button>
+      <button class="secondary-button" onclick="showLogView()">Feed Log</button>
+    </div>
+
+    <!-- Feed Log View -->
+    <div id="logView" class="log-container">
+      <label class="select-label">Recent Dispense Activity (PST):</label>
+      <ul id="logList" class="log-list">
+        <li class="log-empty">No dispense records yet.</li>
+      </ul>
+      <button class="secondary-button" onclick="showControlsView()">← Back to Controls</button>
     </div>
   </div>
 
   <script>
+    // Storage array for feed logs (max 10)
+    let feedLogs = [];
+
     function triggerDispense() {
       const revs = document.getElementById('revSelect').value;
+      
+      // Get current date & time formatted in PST down to the minute
+      const now = new Date();
+      const options = {
+        timeZone: 'America/Los_Angeles',
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      };
+      const pstTimeString = now.toLocaleString('en-US', options);
+
+      // Add new log to the top of the array
+      feedLogs.unshift({ time: pstTimeString, revs: revs });
+
+      // Maintain maximum limit of 10 entries (remove oldest)
+      if (feedLogs.length > 10) {
+        feedLogs.pop();
+      }
+
+      updateLogUI();
       alert(`Demo Mode: Dispense request sent for ${revs} revolution(s). (Hardware connection pending)`);
+    }
+
+    function updateLogUI() {
+      const logListElement = document.getElementById('logList');
+      
+      if (feedLogs.length === 0) {
+        logListElement.innerHTML = '<li class="log-empty">No dispense records yet.</li>';
+        return;
+      }
+
+      logListElement.innerHTML = feedLogs.map(log => `
+        <li class="log-item">
+          <span>${log.time}</span>
+          <strong>${log.revs} Rev${log.revs > 1 ? 's' : ''}</strong>
+        </li>
+      `).join('');
+    }
+
+    function showLogView() {
+      document.getElementById('controlsView').style.display = 'none';
+      document.getElementById('logView').style.display = 'block';
+    }
+
+    function showControlsView() {
+      document.getElementById('logView').style.display = 'none';
+      document.getElementById('controlsView').style.display = 'flex';
     }
   </script>
 
