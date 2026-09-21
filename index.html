@@ -5,18 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Smart Pet Feeder Dashboard</title>
   <style>
-    /* CSS: Visual Styling */
+    /* CSS: Muted / Slate Color Scheme */
     :root {
-      --primary-color: #4f46e5;
-      --bg-color: #f3f4f6;
+      --primary-color: #475569;
+      --primary-hover: #334155;
+      --bg-color: #f1f5f9;
       --card-bg: #ffffff;
-      --text-color: #1f2937;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
     }
 
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background-color: var(--bg-color);
-      color: var(--text-color);
+      color: var(--text-main);
       margin: 0;
       padding: 20px;
       display: flex;
@@ -27,103 +30,139 @@
 
     .dashboard-card {
       background-color: var(--card-bg);
-      border-radius: 16px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-      padding: 30px;
-      max-width: 400px;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      padding: 28px;
+      max-width: 380px;
       width: 100%;
       text-align: center;
     }
 
     h1 {
-      font-size: 1.5rem;
-      margin-bottom: 5px;
+      font-size: 1.35rem;
+      margin-top: 0;
+      margin-bottom: 8px;
+      color: var(--text-main);
+      font-weight: 600;
     }
 
     .status-badge {
       display: inline-block;
       padding: 4px 12px;
-      border-radius: 20px;
-      background-color: #d1fae5;
-      color: #065f46;
-      font-size: 0.875rem;
+      border-radius: 16px;
+      background-color: #e2e8f0;
+      color: #475569;
+      font-size: 0.8rem;
       font-weight: 600;
-      margin-bottom: 25px;
+      margin-bottom: 24px;
+      letter-spacing: 0.5px;
     }
 
     .weight-display {
-      background-color: #f9fafb;
-      border: 2px solid #e5e7eb;
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 25px;
+      background-color: #f8fafc;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 24px;
     }
 
     .weight-value {
-      font-size: 2.5rem;
+      font-size: 2.2rem;
       font-weight: 700;
-      color: var(--primary-color);
+      color: var(--text-main);
+      margin-top: 4px;
     }
 
     .weight-label {
-      font-size: 0.875rem;
-      color: #6b7280;
+      font-size: 0.8rem;
+      color: var(--text-muted);
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 0.8px;
     }
 
-    .feed-button {
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      text-align: left;
+    }
+
+    .select-label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .select-dropdown {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background-color: #f8fafc;
+      color: var(--text-main);
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    .select-dropdown:focus {
+      border-color: var(--primary-color);
+    }
+
+    .dispense-button {
       background-color: var(--primary-color);
-      color: white;
+      color: #ffffff;
       border: none;
-      border-radius: 10px;
-      padding: 16px 32px;
-      font-size: 1.1rem;
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 1rem;
       font-weight: 600;
       width: 100%;
       cursor: pointer;
-      transition: transform 0.1s ease, background-color 0.2s ease;
+      transition: background-color 0.2s ease;
+      margin-top: 8px;
     }
 
-    .feed-button:hover {
-      background-color: #4338ca;
+    .dispense-button:hover {
+      background-color: var(--primary-hover);
     }
 
-    .feed-button:active {
-      transform: scale(0.98);
+    .dispense-button:active {
+      transform: scale(0.99);
     }
   </style>
 </head>
 <body>
 
-  <!-- HTML: Page Structure -->
   <div class="dashboard-card">
     <h1>🐾 Smart Pet Feeder</h1>
-    <div class="status-badge" id="status">System Online</div>
+    <div class="status-badge" id="status">Offline (Demo Mode)</div>
 
     <div class="weight-display">
       <div class="weight-label">Current Bowl Weight</div>
-      <div class="weight-value"><span id="weight">120</span> <small style="font-size: 1rem;">g</small></div>
+      <div class="weight-value"><span id="weight">0</span> <small style="font-size: 0.9rem; font-weight: 400; color: var(--text-muted);">g</small></div>
     </div>
 
-    <button class="feed-button" onclick="triggerFeed()">Feed Now</button>
+    <div class="control-group">
+      <label class="select-label" for="revSelect">Portion Size (Revolutions):</label>
+      <select id="revSelect" class="select-dropdown">
+        <option value="1">1 Revolution</option>
+        <option value="2">2 Revolutions</option>
+        <option value="3">3 Revolutions</option>
+        <option value="4">4 Revolutions</option>
+      </select>
+
+      <button class="dispense-button" onclick="triggerDispense()">Dispense</button>
+    </div>
   </div>
 
-  <!-- JAVASCRIPT: Interactive Logic -->
   <script>
-    function triggerFeed() {
-      const statusElement = document.getElementById('status');
-      statusElement.innerText = 'Dispensing Food...';
-      statusElement.style.backgroundColor = '#fef3c7';
-      statusElement.style.color = '#92400e';
-
-      // Simulated dispense trigger (Later we will connect this to Firebase/ESP32)
-      setTimeout(() => {
-        statusElement.innerText = 'System Online';
-        statusElement.style.backgroundColor = '#d1fae5';
-        statusElement.style.color = '#065f46';
-        alert('Feed cycle requested!');
-      }, 3000);
+    function triggerDispense() {
+      const revs = document.getElementById('revSelect').value;
+      alert(`Demo Mode: Dispense request sent for ${revs} revolution(s). (Hardware connection pending)`);
     }
   </script>
 
