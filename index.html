@@ -29,11 +29,12 @@
     }
 
     .dashboard-card {
+      position: relative; /* Allows absolute positioning for footer elements */
       background-color: var(--card-bg);
       border: 1px solid var(--border-color);
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-      padding: 28px;
+      padding: 28px 28px 40px 28px; /* Extra bottom padding for version text */
       max-width: 380px;
       width: 100%;
       text-align: center;
@@ -180,6 +181,16 @@
       color: var(--text-muted);
       font-size: 0.85rem;
     }
+
+    /* Bottom Left Version Tag */
+    .version-tag {
+      position: absolute;
+      bottom: 12px;
+      left: 16px;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
   </style>
 
   <!-- Firebase Web SDK Libraries -->
@@ -219,6 +230,9 @@
       </ul>
       <button class="secondary-button" onclick="showControlsView()">← Back to Controls</button>
     </div>
+
+    <!-- Version Indicator -->
+    <div class="version-tag">Ver 1.0.4</div>
   </div>
 
   <script>
