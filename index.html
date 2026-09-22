@@ -13,7 +13,10 @@
       --card-bg: #ffffff;
       --text-main: #0f172a;
       --text-muted: #64748b;
-      --border-color: #e2e8f0;
+      --border-color: #cbd5e1;
+      --success-bg: #f0fdf4;
+      --success-border: #bbf7d0;
+      --success-text: #166534;
     }
 
     body {
@@ -21,119 +24,126 @@
       background-color: var(--bg-color);
       color: var(--text-main);
       margin: 0;
-      padding: 20px;
+      padding: 24px;
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
+      box-sizing: border-box;
     }
 
     .dashboard-card {
-      position: relative; /* Allows absolute positioning for footer elements */
+      position: relative;
       background-color: var(--card-bg);
       border: 1px solid var(--border-color);
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-      padding: 28px 28px 40px 28px; /* Extra bottom padding for version text */
-      max-width: 380px;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+      padding: 40px 36px 48px 36px;
+      max-width: 460px;
       width: 100%;
       text-align: center;
     }
 
     h1 {
-      font-size: 1.35rem;
+      font-size: 1.8rem;
       margin-top: 0;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
       color: var(--text-main);
-      font-weight: 600;
+      font-weight: 700;
     }
 
     .status-badge {
       display: inline-block;
-      padding: 4px 12px;
-      border-radius: 16px;
+      padding: 6px 16px;
+      border-radius: 20px;
       background-color: #e2e8f0;
       color: #475569;
-      font-size: 0.8rem;
+      font-size: 0.9rem;
       font-weight: 600;
-      margin-bottom: 24px;
+      margin-bottom: 32px;
       letter-spacing: 0.5px;
     }
 
-    .weight-display {
-      background-color: #f8fafc;
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 16px;
+    /* Custom Toast Notification Banner */
+    .toast-banner {
+      display: none;
+      background-color: var(--success-bg);
+      border: 1px solid var(--success-border);
+      color: var(--success-text);
+      padding: 14px 18px;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
       margin-bottom: 24px;
+      animation: fadeIn 0.3s ease-in-out;
     }
 
-    .weight-value {
-      font-size: 2.2rem;
-      font-weight: 700;
-      color: var(--text-main);
-      margin-top: 4px;
-    }
-
-    .weight-label {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .control-group {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 16px;
       text-align: left;
     }
 
     .select-label {
-      font-size: 0.85rem;
+      font-size: 1rem;
       color: var(--text-muted);
-      font-weight: 500;
+      font-weight: 600;
     }
 
     .select-dropdown {
       width: 100%;
-      padding: 12px;
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
+      padding: 14px 16px;
+      border: 1.5px solid var(--border-color);
+      border-radius: 10px;
       background-color: #f8fafc;
       color: var(--text-main);
-      font-size: 0.95rem;
+      font-size: 1.05rem;
       font-weight: 500;
       cursor: pointer;
       outline: none;
       box-sizing: border-box;
+      transition: border-color 0.2s ease;
+    }
+
+    .select-dropdown:focus {
+      border-color: var(--primary-color);
     }
 
     .dispense-button {
       background-color: var(--primary-color);
       color: #ffffff;
       border: none;
-      border-radius: 8px;
-      padding: 14px;
-      font-size: 1rem;
+      border-radius: 10px;
+      padding: 16px;
+      font-size: 1.15rem;
       font-weight: 600;
       width: 100%;
       cursor: pointer;
-      transition: background-color 0.2s ease;
-      margin-top: 4px;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+      margin-top: 6px;
     }
 
     .dispense-button:hover {
       background-color: var(--primary-hover);
     }
 
+    .dispense-button:active {
+      transform: scale(0.99);
+    }
+
     .secondary-button {
       background-color: transparent;
       color: var(--text-muted);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 10px;
-      font-size: 0.85rem;
+      border: 1.5px solid var(--border-color);
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 0.95rem;
       font-weight: 600;
       width: 100%;
       cursor: pointer;
@@ -154,18 +164,18 @@
     .log-list {
       list-style: none;
       padding: 0;
-      margin: 16px 0;
-      max-height: 240px;
+      margin: 18px 0;
+      max-height: 280px;
       overflow-y: auto;
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
+      border: 1.5px solid var(--border-color);
+      border-radius: 10px;
       background-color: #f8fafc;
     }
 
     .log-item {
-      padding: 10px 14px;
+      padding: 12px 16px;
       border-bottom: 1px solid var(--border-color);
-      font-size: 0.85rem;
+      font-size: 0.95rem;
       display: flex;
       justify-content: space-between;
       color: var(--text-main);
@@ -176,18 +186,18 @@
     }
 
     .log-empty {
-      padding: 16px;
+      padding: 20px;
       text-align: center;
       color: var(--text-muted);
-      font-size: 0.85rem;
+      font-size: 0.95rem;
     }
 
     /* Bottom Left Version Tag */
     .version-tag {
       position: absolute;
-      bottom: 12px;
-      left: 16px;
-      font-size: 0.72rem;
+      bottom: 14px;
+      left: 18px;
+      font-size: 0.8rem;
       color: var(--text-muted);
       font-weight: 500;
     }
@@ -203,10 +213,8 @@
     <h1>🐾 Smart Pet Feeder</h1>
     <div class="status-badge" id="status">Offline (Demo Mode)</div>
 
-    <div class="weight-display">
-      <div class="weight-label">Current Bowl Weight</div>
-      <div class="weight-value"><span id="weight">0</span> <small style="font-size: 0.9rem; font-weight: 400; color: var(--text-muted);">g</small></div>
-    </div>
+    <!-- Custom Notification Banner -->
+    <div id="toastBanner" class="toast-banner"></div>
 
     <!-- Main Controls View -->
     <div id="controlsView" class="control-group">
@@ -232,7 +240,7 @@
     </div>
 
     <!-- Version Indicator -->
-    <div class="version-tag">Ver 1.0.4</div>
+    <div class="version-tag">Ver 1.0.5</div>
   </div>
 
   <script>
@@ -308,7 +316,19 @@
         }
       });
 
-      alert(`Demo Mode: Dispense request saved to cloud for ${revs} revolution(s).`);
+      // Show in-app banner alert
+      showToast(`Food Dispensed! (${revs} Rev${revs > 1 ? 's' : ''})`);
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toastBanner');
+      toast.innerText = message;
+      toast.style.display = 'block';
+
+      // Automatically hide after 3 seconds
+      setTimeout(() => {
+        toast.style.display = 'none';
+      }, 3000);
     }
 
     function showLogView() {
