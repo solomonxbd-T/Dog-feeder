@@ -181,6 +181,10 @@
       font-size: 0.85rem;
     }
   </style>
+
+  <!-- Firebase Web SDK Libraries -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
 <body>
 
@@ -211,15 +215,48 @@
     <div id="logView" class="log-container">
       <label class="select-label">Recent Dispense Activity (PST):</label>
       <ul id="logList" class="log-list">
-        <li class="log-empty">No dispense records yet.</li>
+        <li class="log-empty">Loading logs from database...</li>
       </ul>
       <button class="secondary-button" onclick="showControlsView()">← Back to Controls</button>
     </div>
   </div>
 
   <script>
-    // Storage array for feed logs (max 10)
-    let feedLogs = [];
+    // Initialize Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyCwRSWrUoNP7JrGyqEVspQaxKPn8zuib1I",
+      authDomain: "dog-feeder-63c72.firebaseapp.com",
+      databaseURL: "https://dog-feeder-63c72-default-rtdb.firebaseio.com",
+      projectId: "dog-feeder-63c72",
+      storageBucket: "dog-feeder-63c72.firebasestorage.app",
+      messagingSenderId: "804213473474",
+      appId: "1:804213473474:web:e57bbd74bddd998bc73b5b"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const logsRef = db.ref("feed_logs");
+
+    // Listen for Realtime Database Updates
+    logsRef.limitToLast(10).on("value", (snapshot) => {
+      const logListElement = document.getElementById("logList");
+      const data = snapshot.val();
+
+      if (!data) {
+        logListElement.innerHTML = '<li class="log-empty">No dispense records yet.</li>';
+        return;
+      }
+
+      // Convert Firebase object into an array and reverse so newest is at the top
+      const logsArray = Object.values(data).reverse();
+
+      logListElement.innerHTML = logsArray.map(log => `
+        <li class="log-item">
+          <span>${log.time}</span>
+          <strong>${log.revs} Rev${log.revs > 1 ? 's' : ''}</strong>
+        </li>
+      `).join('');
+    });
 
     function triggerDispense() {
       const revs = document.getElementById('revSelect').value;
@@ -236,32 +273,28 @@
       };
       const pstTimeString = now.toLocaleString('en-US', options);
 
-      // Add new log to the top of the array
-      feedLogs.unshift({ time: pstTimeString, revs: revs });
+      // Push new log entry into Firebase Realtime Database
+      logsRef.push({
+        time: pstTimeString,
+        revs: revs,
+        timestamp: firebase.database.ServerValue.TIMESTAMP
+      });
 
-      // Maintain maximum limit of 10 entries (remove oldest)
-      if (feedLogs.length > 10) {
-        feedLogs.pop();
-      }
+      // Cleanup: Keep only the 10 most recent logs in Firebase
+      logsRef.once("value", (snapshot) => {
+        const total = snapshot.numChildren();
+        if (total > 10) {
+          let count = 0;
+          snapshot.forEach((child) => {
+            if (count < total - 10) {
+              logsRef.child(child.key).remove();
+            }
+            count++;
+          });
+        }
+      });
 
-      updateLogUI();
-      alert(`Demo Mode: Dispense request sent for ${revs} revolution(s). (Hardware connection pending)`);
-    }
-
-    function updateLogUI() {
-      const logListElement = document.getElementById('logList');
-      
-      if (feedLogs.length === 0) {
-        logListElement.innerHTML = '<li class="log-empty">No dispense records yet.</li>';
-        return;
-      }
-
-      logListElement.innerHTML = feedLogs.map(log => `
-        <li class="log-item">
-          <span>${log.time}</span>
-          <strong>${log.revs} Rev${log.revs > 1 ? 's' : ''}</strong>
-        </li>
-      `).join('');
+      alert(`Demo Mode: Dispense request saved to cloud for ${revs} revolution(s).`);
     }
 
     function showLogView() {
