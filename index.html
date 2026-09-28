@@ -351,7 +351,7 @@
         <div class="modal-title">Security Key Required</div>
         <div class="modal-text" id="modalText">Enter security key to dispense:</div>
         
-        <input type="text" id="passkeyInput" class="key-input" maxlength="4" placeholder="____" autocomplete="off">
+        <input type="text" id="passkeyInput" class="key-input" maxlength="4" placeholder="____" autocomplete="off" onkeyup="handleKeyPress(event)">
         <div id="errorMsg" class="error-msg">Incorrect key. Try again.</div>
 
         <div class="modal-actions">
@@ -362,7 +362,7 @@
     </div>
 
     <!-- Version Indicator -->
-    <div class="version-tag">Ver 1.0.7</div>
+    <div class="version-tag">Ver 1.0.8</div>
   </div>
 
   <script>
@@ -381,7 +381,7 @@
     const db = firebase.database();
     const logsRef = db.ref("feed_logs");
 
-    const CORRECT_KEY = "SXAD";
+    const CORRECT_KEY = "ADSB";
     let pendingRevs = 1;
 
     // Listen for Realtime Database Updates (Limit to 5 entries)
@@ -420,6 +420,12 @@
 
     function closeModal() {
       document.getElementById('confirmModal').style.display = 'none';
+    }
+
+    function handleKeyPress(event) {
+      if (event.key === "Enter") {
+        verifyAndDispense();
+      }
     }
 
     function verifyAndDispense() {
