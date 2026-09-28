@@ -17,6 +17,7 @@
       --success-bg: #f0fdf4;
       --success-border: #bbf7d0;
       --success-text: #166534;
+      --error-text: #dc2626;
     }
 
     body {
@@ -192,7 +193,7 @@
       font-size: 0.95rem;
     }
 
-    /* Confirmation Modal Styling */
+    /* Confirmation & Passcode Modal Styling */
     .modal-overlay {
       display: none;
       position: absolute;
@@ -216,6 +217,8 @@
       margin: 20px;
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
       text-align: center;
+      width: 100%;
+      max-width: 320px;
     }
 
     .modal-title {
@@ -228,7 +231,34 @@
     .modal-text {
       font-size: 0.95rem;
       color: var(--text-muted);
-      margin-bottom: 20px;
+      margin-bottom: 16px;
+    }
+
+    .key-input {
+      width: 100%;
+      padding: 10px;
+      border: 1.5px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 1.1rem;
+      text-align: center;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      font-weight: 700;
+      box-sizing: border-box;
+      margin-bottom: 8px;
+      outline: none;
+    }
+
+    .key-input:focus {
+      border-color: var(--primary-color);
+    }
+
+    .error-msg {
+      color: var(--error-text);
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: none;
     }
 
     .modal-actions {
@@ -315,20 +345,24 @@
       <button class="secondary-button" onclick="showControlsView()">← Back to Controls</button>
     </div>
 
-    <!-- Confirmation Modal Overlay -->
+    <!-- Confirmation & Key Entry Modal Overlay -->
     <div id="confirmModal" class="modal-overlay">
       <div class="modal-box">
-        <div class="modal-title">Confirm Dispense</div>
-        <div class="modal-text" id="modalText">Are you sure you want to dispense?</div>
+        <div class="modal-title">Security Key Required</div>
+        <div class="modal-text" id="modalText">Enter security key to dispense:</div>
+        
+        <input type="text" id="passkeyInput" class="key-input" maxlength="4" placeholder="____" autocomplete="off">
+        <div id="errorMsg" class="error-msg">Incorrect key. Try again.</div>
+
         <div class="modal-actions">
           <button class="btn-cancel" onclick="closeModal()">Cancel</button>
-          <button class="btn-confirm" onclick="confirmDispense()">Confirm</button>
+          <button class="btn-confirm" onclick="verifyAndDispense()">Dispense</button>
         </div>
       </div>
     </div>
 
     <!-- Version Indicator -->
-    <div class="version-tag">Ver 1.0.6</div>
+    <div class="version-tag">Ver 1.0.7</div>
   </div>
 
   <script>
@@ -347,6 +381,7 @@
     const db = firebase.database();
     const logsRef = db.ref("feed_logs");
 
+    const CORRECT_KEY = "SXAD";
     let pendingRevs = 1;
 
     // Listen for Realtime Database Updates (Limit to 5 entries)
@@ -372,15 +407,31 @@
 
     function promptDispense() {
       pendingRevs = document.getElementById('revSelect').value;
-      document.getElementById('modalText').innerText = `Are you sure you want to dispense ${pendingRevs} revolution${pendingRevs > 1 ? 's' : ''}?`;
+      document.getElementById('modalText').innerText = `Dispensing ${pendingRevs} Rev${pendingRevs > 1 ? 's' : ''}. Enter key:`;
+      document.getElementById('passkeyInput').value = '';
+      document.getElementById('errorMsg').style.display = 'none';
       document.getElementById('confirmModal').style.display = 'flex';
+      
+      // Auto-focus the input box
+      setTimeout(() => {
+        document.getElementById('passkeyInput').focus();
+      }, 100);
     }
 
     function closeModal() {
       document.getElementById('confirmModal').style.display = 'none';
     }
 
-    function confirmDispense() {
+    function verifyAndDispense() {
+      const enteredKey = document.getElementById('passkeyInput').value.trim().toUpperCase();
+
+      if (enteredKey !== CORRECT_KEY) {
+        document.getElementById('errorMsg').style.display = 'block';
+        document.getElementById('passkeyInput').value = '';
+        document.getElementById('passkeyInput').focus();
+        return;
+      }
+
       closeModal();
       
       // Get current date & time formatted in PST down to the minute
