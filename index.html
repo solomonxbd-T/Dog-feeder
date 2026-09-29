@@ -43,8 +43,7 @@
       max-width: 460px;
       width: 100%;
       text-align: center;
-      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-      overflow: hidden;
+      overflow: visible;
     }
 
     h1 {
@@ -67,23 +66,31 @@
       letter-spacing: 0.5px;
     }
 
-    /* Custom Toast Notification Banner */
+    /* Custom Toast Notification Banner (Overlay Positioned) */
     .toast-banner {
       display: none;
+      position: absolute;
+      top: 20px;
+      left: 36px;
+      right: 36px;
       background-color: var(--success-bg);
       border: 1px solid var(--success-border);
       color: var(--success-text);
-      padding: 14px 18px;
+      padding: 12px 16px;
       border-radius: 10px;
       font-size: 0.95rem;
       font-weight: 600;
-      margin-bottom: 24px;
-      animation: slideDown 0.35s ease-in-out;
+      z-index: 20;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      opacity: 0;
+      transform: translateY(-10px);
+      transition: opacity 0.35s ease, transform 0.35s ease;
     }
 
-    @keyframes slideDown {
-      from { opacity: 0; transform: translateY(-12px); }
-      to { opacity: 1; transform: translateY(0); }
+    .toast-banner.show {
+      display: block;
+      opacity: 1;
+      transform: translateY(0);
     }
 
     .control-group {
@@ -91,7 +98,6 @@
       flex-direction: column;
       gap: 16px;
       text-align: left;
-      transition: opacity 0.3s ease, transform 0.3s ease;
     }
 
     .select-label {
@@ -100,7 +106,7 @@
       font-weight: 600;
     }
 
-    /* Custom Custom Dropdown Component */
+    /* Custom Dropdown Component */
     .custom-select-wrapper {
       position: relative;
       user-select: none;
@@ -151,7 +157,7 @@
       border: 1.5px solid var(--border-color);
       border-radius: 10px;
       box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
-      z-index: 5;
+      z-index: 15;
       opacity: 0;
       visibility: hidden;
       transform: translateY(-8px);
@@ -227,7 +233,6 @@
     .log-container {
       display: none;
       text-align: left;
-      transition: opacity 0.3s ease;
     }
 
     .log-list {
@@ -273,7 +278,7 @@
       border-radius: 16px;
       justify-content: center;
       align-items: center;
-      z-index: 10;
+      z-index: 25;
       animation: fadeIn 0.25s ease-in-out;
     }
 
@@ -292,6 +297,20 @@
       text-align: center;
       width: 100%;
       max-width: 320px;
+    }
+
+    /* Subtle Modal Shake Animation */
+    .shake {
+      animation: modalShake 0.35s ease-in-out;
+    }
+
+    @keyframes modalShake {
+      0% { transform: translateX(0); }
+      20% { transform: translateX(-8px); }
+      40% { transform: translateX(8px); }
+      60% { transform: translateX(-5px); }
+      80% { transform: translateX(5px); }
+      100% { transform: translateX(0); }
     }
 
     .modal-title {
@@ -392,7 +411,7 @@
     <h1>🐾 Smart Pet Feeder</h1>
     <div class="status-badge" id="status">Offline (Demo Mode)</div>
 
-    <!-- Custom Notification Banner -->
+    <!-- Custom Notification Banner (Overlay) -->
     <div id="toastBanner" class="toast-banner"></div>
 
     <!-- Main Controls View -->
@@ -409,7 +428,6 @@
           <div class="custom-option selected" data-value="1" onclick="selectOption('1', '1 Revolution', this)">1 Revolution</div>
           <div class="custom-option" data-value="2" onclick="selectOption('2', '2 Revolutions', this)">2 Revolutions</div>
           <div class="custom-option" data-value="3" onclick="selectOption('3', '3 Revolutions', this)">3 Revolutions</div>
-          <div class="custom-option" data-value="4" onclick="selectOption('4', '4 Revolutions', this)">4 Revolutions</div>
         </div>
       </div>
 
@@ -428,7 +446,7 @@
 
     <!-- Confirmation & Key Entry Modal Overlay -->
     <div id="confirmModal" class="modal-overlay">
-      <div class="modal-box">
+      <div class="modal-box" id="modalBox">
         <div class="modal-title">Security Key Required</div>
         <div class="modal-text" id="modalText">Enter security key to dispense:</div>
         
@@ -485,7 +503,7 @@
     // Close dropdown when clicking outside
     window.addEventListener('click', function(e) {
       const customSelect = document.getElementById('customSelect');
-      if (!customSelect.contains(e.target)) {
+      if (customSelect && !customSelect.contains(e.target)) {
         customSelect.classList.remove('open');
       }
     });
@@ -516,6 +534,7 @@
       document.getElementById('modalText').innerText = `Dispensing ${pendingRevs} Rev${pendingRevs > 1 ? 's' : ''}. Enter key:`;
       document.getElementById('passkeyInput').value = '';
       document.getElementById('errorMsg').style.display = 'none';
+      document.getElementById('modalBox').classList.remove('shake');
       document.getElementById('confirmModal').style.display = 'flex';
       
       // Auto-focus the input box
@@ -538,9 +557,15 @@
       const enteredKey = document.getElementById('passkeyInput').value.trim().toUpperCase();
 
       if (enteredKey !== CORRECT_KEY) {
+        const modalBox = document.getElementById('modalBox');
         document.getElementById('errorMsg').style.display = 'block';
         document.getElementById('passkeyInput').value = '';
         document.getElementById('passkeyInput').focus();
+        
+        // Trigger subtle shake animation
+        modalBox.classList.remove('shake');
+        void modalBox.offsetWidth; // Force reflow
+        modalBox.classList.add('shake');
         return;
       }
 
@@ -579,18 +604,18 @@
         }
       });
 
-      // Show in-app banner alert
+      // Show overlay toast banner
       showToast(`Food Dispensed! (${pendingRevs} Rev${pendingRevs > 1 ? 's' : ''})`);
     }
 
     function showToast(message) {
       const toast = document.getElementById('toastBanner');
       toast.innerText = message;
-      toast.style.display = 'block';
+      toast.classList.add('show');
 
-      // Automatically hide after 3 seconds
+      // Automatically fade out and hide after 3 seconds
       setTimeout(() => {
-        toast.style.display = 'none';
+        toast.classList.remove('show');
       }, 3000);
     }
 
