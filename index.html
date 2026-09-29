@@ -43,6 +43,8 @@
       max-width: 460px;
       width: 100%;
       text-align: center;
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
     }
 
     h1 {
@@ -76,11 +78,11 @@
       font-size: 0.95rem;
       font-weight: 600;
       margin-bottom: 24px;
-      animation: fadeIn 0.3s ease-in-out;
+      animation: slideDown 0.35s ease-in-out;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-8px); }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-12px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
@@ -89,6 +91,7 @@
       flex-direction: column;
       gap: 16px;
       text-align: left;
+      transition: opacity 0.3s ease, transform 0.3s ease;
     }
 
     .select-label {
@@ -97,7 +100,16 @@
       font-weight: 600;
     }
 
-    .select-dropdown {
+    /* Custom Custom Dropdown Component */
+    .custom-select-wrapper {
+      position: relative;
+      user-select: none;
+    }
+
+    .custom-select-trigger {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       width: 100%;
       padding: 14px 16px;
       border: 1.5px solid var(--border-color);
@@ -107,13 +119,68 @@
       font-size: 1.05rem;
       font-weight: 500;
       cursor: pointer;
-      outline: none;
       box-sizing: border-box;
-      transition: border-color 0.2s ease;
+      transition: border-color 0.2s ease, background-color 0.2s ease;
     }
 
-    .select-dropdown:focus {
-      border-color: var(--primary-color);
+    .custom-select-trigger:hover {
+      background-color: #f1f5f9;
+      border-color: #94a3b8;
+    }
+
+    .arrow {
+      width: 10px;
+      height: 10px;
+      border-right: 2px solid var(--text-muted);
+      border-bottom: 2px solid var(--text-muted);
+      transform: rotate(45deg);
+      transition: transform 0.3s ease;
+      margin-right: 4px;
+    }
+
+    .custom-select-wrapper.open .arrow {
+      transform: rotate(-135deg);
+    }
+
+    .custom-options {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      background-color: #ffffff;
+      border: 1.5px solid var(--border-color);
+      border-radius: 10px;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+      z-index: 5;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-8px);
+      transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s;
+      overflow: hidden;
+    }
+
+    .custom-select-wrapper.open .custom-options {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .custom-option {
+      padding: 12px 16px;
+      font-size: 1rem;
+      color: var(--text-main);
+      cursor: pointer;
+      transition: background-color 0.15s ease, color 0.15s ease;
+    }
+
+    .custom-option:hover {
+      background-color: #f1f5f9;
+      color: var(--primary-color);
+    }
+
+    .custom-option.selected {
+      background-color: #e2e8f0;
+      font-weight: 600;
     }
 
     .dispense-button {
@@ -160,6 +227,7 @@
     .log-container {
       display: none;
       text-align: left;
+      transition: opacity 0.3s ease;
     }
 
     .log-list {
@@ -206,7 +274,12 @@
       justify-content: center;
       align-items: center;
       z-index: 10;
-      animation: fadeIn 0.2s ease-in-out;
+      animation: fadeIn 0.25s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
 
     .modal-box {
@@ -316,7 +389,7 @@
 <body>
 
   <div class="dashboard-card">
-    <h1>Mobile Dog Feeder 🐶</h1>
+    <h1>🐾 Smart Pet Feeder</h1>
     <div class="status-badge" id="status">Offline (Demo Mode)</div>
 
     <!-- Custom Notification Banner -->
@@ -324,13 +397,21 @@
 
     <!-- Main Controls View -->
     <div id="controlsView" class="control-group">
-      <label class="select-label" for="revSelect">Portion Size (Revolutions):</label>
-      <select id="revSelect" class="select-dropdown">
-        <option value="1">1 Revolution</option>
-        <option value="2">2 Revolutions</option>
-        <option value="3">3 Revolutions</option>
-        <option value="4">4 Revolutions</option>
-      </select>
+      <label class="select-label">Portion Size (Revolutions):</label>
+
+      <!-- Custom Animated Select Dropdown -->
+      <div class="custom-select-wrapper" id="customSelect">
+        <div class="custom-select-trigger" onclick="toggleDropdown()">
+          <span id="selectedOptionText">1 Revolution</span>
+          <div class="arrow"></div>
+        </div>
+        <div class="custom-options">
+          <div class="custom-option selected" data-value="1" onclick="selectOption('1', '1 Revolution', this)">1 Revolution</div>
+          <div class="custom-option" data-value="2" onclick="selectOption('2', '2 Revolutions', this)">2 Revolutions</div>
+          <div class="custom-option" data-value="3" onclick="selectOption('3', '3 Revolutions', this)">3 Revolutions</div>
+          <div class="custom-option" data-value="4" onclick="selectOption('4', '4 Revolutions', this)">4 Revolutions</div>
+        </div>
+      </div>
 
       <button class="dispense-button" onclick="promptDispense()">Dispense</button>
       <button class="secondary-button" onclick="showLogView()">Feed Log</button>
@@ -382,7 +463,32 @@
     const logsRef = db.ref("feed_logs");
 
     const CORRECT_KEY = "ADSB";
-    let pendingRevs = 1;
+    let selectedRevs = "1";
+    let pendingRevs = "1";
+
+    // Custom Dropdown Handlers
+    function toggleDropdown() {
+      document.getElementById('customSelect').classList.toggle('open');
+    }
+
+    function selectOption(val, label, el) {
+      selectedRevs = val;
+      document.getElementById('selectedOptionText').innerText = label;
+      
+      const options = document.querySelectorAll('.custom-option');
+      options.forEach(opt => opt.classList.remove('selected'));
+      el.classList.add('selected');
+      
+      document.getElementById('customSelect').classList.remove('open');
+    }
+
+    // Close dropdown when clicking outside
+    window.addEventListener('click', function(e) {
+      const customSelect = document.getElementById('customSelect');
+      if (!customSelect.contains(e.target)) {
+        customSelect.classList.remove('open');
+      }
+    });
 
     // Listen for Realtime Database Updates (Limit to 5 entries)
     logsRef.limitToLast(5).on("value", (snapshot) => {
@@ -406,7 +512,7 @@
     });
 
     function promptDispense() {
-      pendingRevs = document.getElementById('revSelect').value;
+      pendingRevs = selectedRevs;
       document.getElementById('modalText').innerText = `Dispensing ${pendingRevs} Rev${pendingRevs > 1 ? 's' : ''}. Enter key:`;
       document.getElementById('passkeyInput').value = '';
       document.getElementById('errorMsg').style.display = 'none';
