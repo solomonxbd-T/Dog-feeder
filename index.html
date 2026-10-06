@@ -47,16 +47,15 @@
       transition: border-color 0.3s ease;
     }
 
-    /* Simulated Corner LED Visual Cues for Test Mode */
+    /* Subtle Corner LEDs */
     .corner-led {
       position: absolute;
-      width: 10px;
-      height: 10px;
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
-      background-color: #eab308;
-      box-shadow: 0 0 10px #fde047, 0 0 15px #eab308;
-      opacity: 0;
-      transition: opacity 0.3s ease;
+      background-color: #ef4444;
+      box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
     }
 
     .corner-led.tl { top: 12px; left: 12px; }
@@ -64,8 +63,20 @@
     .corner-led.bl { bottom: 12px; left: 12px; }
     .corner-led.br { bottom: 12px; right: 12px; }
 
-    .test-mode-active .corner-led {
-      opacity: 1;
+    /* LED Color Themes for States */
+    .mode-offline .corner-led {
+      background-color: #ef4444;
+      box-shadow: 0 0 6px rgba(239, 68, 68, 0.5);
+    }
+
+    .mode-test .corner-led {
+      background-color: #eab308;
+      box-shadow: 0 0 6px rgba(234, 179, 8, 0.6);
+    }
+
+    .mode-online .corner-led {
+      background-color: #22c55e;
+      box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
     }
 
     h1 {
@@ -462,8 +473,8 @@
 </head>
 <body>
 
-  <div class="dashboard-card" id="mainCard">
-    <!-- Simulated Corner LEDs for Test Mode Visual Cue -->
+  <div class="dashboard-card mode-offline" id="mainCard">
+    <!-- Consistent Corner LEDs for Hardware Parity -->
     <div class="corner-led tl"></div>
     <div class="corner-led tr"></div>
     <div class="corner-led bl"></div>
@@ -476,7 +487,7 @@
     <div class="mode-selector">
       <button class="mode-btn active" id="btnOffline" onclick="setStatusMode('offline')">Offline</button>
       <button class="mode-btn" id="btnTest" onclick="setStatusMode('test')">Online (Test)</button>
-      <button class="mode-btn" id="btnOnline" onclick="setStatusMode('online')">Online</button>
+      <button class="mode-btn" id="btnOnline" onclick="setStatusMode('online')">Online (WIP)</button>
     </div>
 
     <!-- Custom Notification Banner (Overlay) -->
@@ -564,21 +575,23 @@
       document.getElementById("btnTest").classList.remove("active");
       document.getElementById("btnOnline").classList.remove("active");
 
-      card.classList.remove("test-mode-active");
+      card.classList.remove("mode-offline", "mode-test", "mode-online");
 
       if (mode === 'offline') {
         document.getElementById("btnOffline").classList.add("active");
         badge.className = "status-badge status-offline";
         badge.innerText = "🔴 Offline (Demo Mode)";
+        card.classList.add("mode-offline");
       } else if (mode === 'test') {
         document.getElementById("btnTest").classList.add("active");
         badge.className = "status-badge status-test";
         badge.innerText = "🟡 Online (Test Mode)";
-        card.classList.add("test-mode-active");
+        card.classList.add("mode-test");
       } else if (mode === 'online') {
         document.getElementById("btnOnline").classList.add("active");
         badge.className = "status-badge status-online";
-        badge.innerText = "🟢 Online";
+        badge.innerText = "🟢 Online (WIP)";
+        card.classList.add("mode-online");
       }
     }
 
@@ -616,7 +629,6 @@
         return;
       }
 
-      // Convert Firebase object into an array and reverse so newest is at the top
       const logsArray = Object.values(data).reverse();
 
       logListElement.innerHTML = logsArray.map(log => `
@@ -629,7 +641,7 @@
 
     function promptDispense() {
       pendingRevs = selectedRevs;
-      const modeLabel = currentStatus === 'test' ? ' [TEST]' : '';
+      const modeLabel = currentStatus === 'test' ? ' [TEST]' : (currentStatus === 'online' ? ' [WIP]' : '');
       document.getElementById('modalText').innerText = `Dispensing ${pendingRevs} Rev${pendingRevs > 1 ? 's' : ''}${modeLabel}. Enter key:`;
       document.getElementById('passkeyInput').value = '';
       document.getElementById('errorMsg').style.display = 'none';
