@@ -43,7 +43,29 @@
       max-width: 460px;
       width: 100%;
       text-align: center;
-      overflow: visible;
+      overflow: hidden;
+      transition: border-color 0.3s ease;
+    }
+
+    /* Simulated Corner LED Visual Cues for Test Mode */
+    .corner-led {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: #eab308;
+      box-shadow: 0 0 10px #fde047, 0 0 15px #eab308;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .corner-led.tl { top: 12px; left: 12px; }
+    .corner-led.tr { top: 12px; right: 12px; }
+    .corner-led.bl { bottom: 12px; left: 12px; }
+    .corner-led.br { bottom: 12px; right: 12px; }
+
+    .test-mode-active .corner-led {
+      opacity: 1;
     }
 
     h1 {
@@ -58,12 +80,46 @@
       display: inline-block;
       padding: 6px 16px;
       border-radius: 20px;
-      background-color: #e2e8f0;
-      color: #475569;
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       font-weight: 600;
-      margin-bottom: 32px;
+      margin-bottom: 20px;
       letter-spacing: 0.5px;
+      transition: all 0.3s ease;
+    }
+
+    .status-offline { background-color: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; }
+    .status-test { background-color: #fef9c3; color: #854d0e; border: 1px solid #fde047; }
+    .status-online { background-color: #dcfce7; color: #166534; border: 1px solid #86efac; }
+
+    /* Interactive Status Mode Picker */
+    .mode-selector {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: 24px;
+      background-color: #f8fafc;
+      padding: 4px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+    }
+
+    .mode-btn {
+      flex: 1;
+      padding: 6px 10px;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .mode-btn.active {
+      background-color: var(--card-bg);
+      color: var(--text-main);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
     }
 
     /* Custom Toast Notification Banner (Overlay Positioned) */
@@ -299,7 +355,6 @@
       max-width: 320px;
     }
 
-    /* Subtle Modal Shake Animation */
     .shake {
       animation: modalShake 0.35s ease-in-out;
     }
@@ -407,9 +462,22 @@
 </head>
 <body>
 
-  <div class="dashboard-card">
+  <div class="dashboard-card" id="mainCard">
+    <!-- Simulated Corner LEDs for Test Mode Visual Cue -->
+    <div class="corner-led tl"></div>
+    <div class="corner-led tr"></div>
+    <div class="corner-led bl"></div>
+    <div class="corner-led br"></div>
+
     <h1>🐾 Smart Pet Feeder</h1>
-    <div class="status-badge" id="status">Offline (Demo Mode)</div>
+    <div class="status-badge status-offline" id="statusBadge">🔴 Offline (Demo Mode)</div>
+
+    <!-- State Switcher -->
+    <div class="mode-selector">
+      <button class="mode-btn active" id="btnOffline" onclick="setStatusMode('offline')">Offline</button>
+      <button class="mode-btn" id="btnTest" onclick="setStatusMode('test')">Online (Test)</button>
+      <button class="mode-btn" id="btnOnline" onclick="setStatusMode('online')">Online</button>
+    </div>
 
     <!-- Custom Notification Banner (Overlay) -->
     <div id="toastBanner" class="toast-banner"></div>
@@ -461,7 +529,7 @@
     </div>
 
     <!-- Version Indicator -->
-    <div class="version-tag">Ver 1.0.8</div>
+    <div class="version-tag">Ver 1.0.9</div>
   </div>
 
   <script>
@@ -483,6 +551,36 @@
     const CORRECT_KEY = "ADSB";
     let selectedRevs = "1";
     let pendingRevs = "1";
+    let currentStatus = "offline";
+
+    // Switch Visual Status Modes
+    function setStatusMode(mode) {
+      currentStatus = mode;
+      const badge = document.getElementById("statusBadge");
+      const card = document.getElementById("mainCard");
+
+      // Reset Active Button States
+      document.getElementById("btnOffline").classList.remove("active");
+      document.getElementById("btnTest").classList.remove("active");
+      document.getElementById("btnOnline").classList.remove("active");
+
+      card.classList.remove("test-mode-active");
+
+      if (mode === 'offline') {
+        document.getElementById("btnOffline").classList.add("active");
+        badge.className = "status-badge status-offline";
+        badge.innerText = "🔴 Offline (Demo Mode)";
+      } else if (mode === 'test') {
+        document.getElementById("btnTest").classList.add("active");
+        badge.className = "status-badge status-test";
+        badge.innerText = "🟡 Online (Test Mode)";
+        card.classList.add("test-mode-active");
+      } else if (mode === 'online') {
+        document.getElementById("btnOnline").classList.add("active");
+        badge.className = "status-badge status-online";
+        badge.innerText = "🟢 Online";
+      }
+    }
 
     // Custom Dropdown Handlers
     function toggleDropdown() {
@@ -524,20 +622,20 @@
       logListElement.innerHTML = logsArray.map(log => `
         <li class="log-item">
           <span>${log.time}</span>
-          <strong>${log.revs} Rev${log.revs > 1 ? 's' : ''}</strong>
+          <strong>${log.revs} Rev${log.revs > 1 ? 's' : ''}${log.isTest ? ' (Test)' : ''}</strong>
         </li>
       `).join('');
     });
 
     function promptDispense() {
       pendingRevs = selectedRevs;
-      document.getElementById('modalText').innerText = `Dispensing ${pendingRevs} Rev${pendingRevs > 1 ? 's' : ''}. Enter key:`;
+      const modeLabel = currentStatus === 'test' ? ' [TEST]' : '';
+      document.getElementById('modalText').innerText = `Dispensing ${pendingRevs} Rev${pendingRevs > 1 ? 's' : ''}${modeLabel}. Enter key:`;
       document.getElementById('passkeyInput').value = '';
       document.getElementById('errorMsg').style.display = 'none';
       document.getElementById('modalBox').classList.remove('shake');
       document.getElementById('confirmModal').style.display = 'flex';
       
-      // Auto-focus the input box
       setTimeout(() => {
         document.getElementById('passkeyInput').focus();
       }, 100);
@@ -562,16 +660,14 @@
         document.getElementById('passkeyInput').value = '';
         document.getElementById('passkeyInput').focus();
         
-        // Trigger subtle shake animation
         modalBox.classList.remove('shake');
-        void modalBox.offsetWidth; // Force reflow
+        void modalBox.offsetWidth;
         modalBox.classList.add('shake');
         return;
       }
 
       closeModal();
       
-      // Get current date & time formatted in PST down to the minute
       const now = new Date();
       const options = {
         timeZone: 'America/Los_Angeles',
@@ -583,14 +679,13 @@
       };
       const pstTimeString = now.toLocaleString('en-US', options);
 
-      // Push new log entry into Firebase Realtime Database
       logsRef.push({
         time: pstTimeString,
         revs: pendingRevs,
+        isTest: (currentStatus === 'test'),
         timestamp: firebase.database.ServerValue.TIMESTAMP
       });
 
-      // Cleanup: Keep only the 5 most recent logs in Firebase
       logsRef.once("value", (snapshot) => {
         const total = snapshot.numChildren();
         if (total > 5) {
@@ -604,8 +699,11 @@
         }
       });
 
-      // Show overlay toast banner
-      showToast(`Food Dispensed! (${pendingRevs} Rev${pendingRevs > 1 ? 's' : ''})`);
+      const alertMessage = currentStatus === 'test' 
+        ? `Test Signal Triggered! (${pendingRevs} Rev${pendingRevs > 1 ? 's' : ''})`
+        : `Food Dispensed! (${pendingRevs} Rev${pendingRevs > 1 ? 's' : ''})`;
+
+      showToast(alertMessage);
     }
 
     function showToast(message) {
@@ -613,7 +711,6 @@
       toast.innerText = message;
       toast.classList.add('show');
 
-      // Automatically fade out and hide after 3 seconds
       setTimeout(() => {
         toast.classList.remove('show');
       }, 3000);
