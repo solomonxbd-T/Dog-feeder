@@ -47,38 +47,6 @@
       transition: border-color 0.3s ease;
     }
 
-    /* Subtle Corner LEDs */
-    .corner-led {
-      position: absolute;
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background-color: #ef4444;
-      box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
-      transition: background-color 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .corner-led.tl { top: 12px; left: 12px; }
-    .corner-led.tr { top: 12px; right: 12px; }
-    .corner-led.bl { bottom: 12px; left: 12px; }
-    .corner-led.br { bottom: 12px; right: 12px; }
-
-    /* LED Color Themes for States */
-    .mode-offline .corner-led {
-      background-color: #ef4444;
-      box-shadow: 0 0 6px rgba(239, 68, 68, 0.5);
-    }
-
-    .mode-test .corner-led {
-      background-color: #eab308;
-      box-shadow: 0 0 6px rgba(234, 179, 8, 0.6);
-    }
-
-    .mode-online .corner-led {
-      background-color: #22c55e;
-      box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
-    }
-
     h1 {
       font-size: 1.8rem;
       margin-top: 0;
@@ -99,10 +67,9 @@
     }
 
     .status-offline { background-color: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; }
-    .status-test { background-color: #fef9c3; color: #854d0e; border: 1px solid #fde047; }
     .status-online { background-color: #dcfce7; color: #166534; border: 1px solid #86efac; }
 
-    /* Interactive Status Mode Picker */
+    /* Interactive Status Mode Picker (Simplified to Offline / Online) */
     .mode-selector {
       display: flex;
       justify-content: center;
@@ -121,7 +88,7 @@
       border-radius: 6px;
       background: transparent;
       color: var(--text-muted);
-      font-size: 0.8rem;
+      font-size: 0.85rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s ease;
@@ -133,11 +100,10 @@
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
     }
 
-    /* Custom Toast Notification Banner (Overlay Positioned) */
+    /* Dropdown Toast Banner from Top of Card */
     .toast-banner {
-      display: none;
       position: absolute;
-      top: 20px;
+      top: -60px; /* Hidden off-screen */
       left: 36px;
       right: 36px;
       background-color: var(--success-bg);
@@ -149,15 +115,13 @@
       font-weight: 600;
       z-index: 20;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      transition: top 0.4s ease-in-out, opacity 0.35s ease;
       opacity: 0;
-      transform: translateY(-10px);
-      transition: opacity 0.35s ease, transform 0.35s ease;
     }
 
     .toast-banner.show {
-      display: block;
+      top: 16px;
       opacity: 1;
-      transform: translateY(0);
     }
 
     .control-group {
@@ -473,25 +437,19 @@
 </head>
 <body>
 
-  <div class="dashboard-card mode-offline" id="mainCard">
-    <!-- Consistent Corner LEDs for Hardware Parity -->
-    <div class="corner-led tl"></div>
-    <div class="corner-led tr"></div>
-    <div class="corner-led bl"></div>
-    <div class="corner-led br"></div>
+  <div class="dashboard-card" id="mainCard">
+
+    <!-- Custom Dropdown Notification Banner -->
+    <div id="toastBanner" class="toast-banner"></div>
 
     <h1>🐾 Smart Pet Feeder</h1>
-    <div class="status-badge status-offline" id="statusBadge">🔴 Offline (Demo Mode)</div>
+    <div class="status-badge status-offline" id="statusBadge">🔴 Offline Mode</div>
 
-    <!-- State Switcher -->
+    <!-- State Switcher (2 Modes Only) -->
     <div class="mode-selector">
       <button class="mode-btn active" id="btnOffline" onclick="setStatusMode('offline')">Offline</button>
-      <button class="mode-btn" id="btnTest" onclick="setStatusMode('test')">Online (Test)</button>
-      <button class="mode-btn" id="btnOnline" onclick="setStatusMode('online')">Online (WIP)</button>
+      <button class="mode-btn" id="btnOnline" onclick="setStatusMode('online')">Online</button>
     </div>
-
-    <!-- Custom Notification Banner (Overlay) -->
-    <div id="toastBanner" class="toast-banner"></div>
 
     <!-- Main Controls View -->
     <div id="controlsView" class="control-group">
@@ -540,7 +498,7 @@
     </div>
 
     <!-- Version Indicator -->
-    <div class="version-tag">Ver 1.0.9</div>
+    <div class="version-tag">Ver 1.1.0</div>
   </div>
 
   <script>
@@ -563,35 +521,25 @@
     let selectedRevs = "1";
     let pendingRevs = "1";
     let currentStatus = "offline";
+    let toastTimeout;
 
     // Switch Visual Status Modes
     function setStatusMode(mode) {
       currentStatus = mode;
       const badge = document.getElementById("statusBadge");
-      const card = document.getElementById("mainCard");
 
       // Reset Active Button States
       document.getElementById("btnOffline").classList.remove("active");
-      document.getElementById("btnTest").classList.remove("active");
       document.getElementById("btnOnline").classList.remove("active");
-
-      card.classList.remove("mode-offline", "mode-test", "mode-online");
 
       if (mode === 'offline') {
         document.getElementById("btnOffline").classList.add("active");
         badge.className = "status-badge status-offline";
-        badge.innerText = "🔴 Offline (Demo Mode)";
-        card.classList.add("mode-offline");
-      } else if (mode === 'test') {
-        document.getElementById("btnTest").classList.add("active");
-        badge.className = "status-badge status-test";
-        badge.innerText = "🟡 Online (Test Mode)";
-        card.classList.add("mode-test");
+        badge.innerText = "🔴 Offline Mode";
       } else if (mode === 'online') {
         document.getElementById("btnOnline").classList.add("active");
         badge.className = "status-badge status-online";
-        badge.innerText = "🟢 Online (WIP)";
-        card.classList.add("mode-online");
+        badge.innerText = "🟢 Online Mode";
       }
     }
 
@@ -634,15 +582,23 @@
       logListElement.innerHTML = logsArray.map(log => `
         <li class="log-item">
           <span>${log.time}</span>
-          <strong>${log.revs} Rev${log.revs > 1 ? 's' : ''}${log.isTest ? ' (Test)' : ''}</strong>
+          <strong>${log.revs || 1} Rev${(log.revs || 1) > 1 ? 's' : ''}</strong>
         </li>
       `).join('');
     });
 
     function promptDispense() {
       pendingRevs = selectedRevs;
-      const modeLabel = currentStatus === 'test' ? ' [TEST]' : (currentStatus === 'online' ? ' [WIP]' : '');
-      document.getElementById('modalText').innerText = `Dispensing ${pendingRevs} Rev${pendingRevs > 1 ? 's' : ''}${modeLabel}. Enter key:`;
+
+      // OFFLINE MODE: Skip modal & skip Firebase completely
+      if (currentStatus === 'offline') {
+        const revLabel = `${pendingRevs} revolution${pendingRevs > 1 ? 's' : ''} dispensed (Offline Mode)`;
+        showToast(revLabel);
+        return;
+      }
+
+      // ONLINE MODE: Open passcode modal
+      document.getElementById('modalText').innerText = `Dispensing ${pendingRevs} Rev${pendingRevs > 1 ? 's' : ''}. Enter key:`;
       document.getElementById('passkeyInput').value = '';
       document.getElementById('errorMsg').style.display = 'none';
       document.getElementById('modalBox').classList.remove('shake');
@@ -691,13 +647,14 @@
       };
       const pstTimeString = now.toLocaleString('en-US', options);
 
+      // Write revolution count to Firebase for PCB to read
       logsRef.push({
         time: pstTimeString,
-        revs: pendingRevs,
-        isTest: (currentStatus === 'test'),
+        revs: parseInt(pendingRevs),
         timestamp: firebase.database.ServerValue.TIMESTAMP
       });
 
+      // Maintain maximum 5 entries in database
       logsRef.once("value", (snapshot) => {
         const total = snapshot.numChildren();
         if (total > 5) {
@@ -711,10 +668,7 @@
         }
       });
 
-      const alertMessage = currentStatus === 'test' 
-        ? `Test Signal Triggered! (${pendingRevs} Rev${pendingRevs > 1 ? 's' : ''})`
-        : `Food Dispensed! (${pendingRevs} Rev${pendingRevs > 1 ? 's' : ''})`;
-
+      const alertMessage = `${pendingRevs} revolution${pendingRevs > 1 ? 's' : ''} dispensed`;
       showToast(alertMessage);
     }
 
@@ -723,7 +677,8 @@
       toast.innerText = message;
       toast.classList.add('show');
 
-      setTimeout(() => {
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
         toast.classList.remove('show');
       }, 3000);
     }
