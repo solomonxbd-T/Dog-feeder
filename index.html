@@ -462,9 +462,9 @@
           <div class="arrow"></div>
         </div>
         <div class="custom-options">
-          <div class="custom-option selected" data-value="1" onclick="selectOption('1', '1 Revolution', this)">1 Revolution</div>
-          <div class="custom-option" data-value="2" onclick="selectOption('2', '2 Revolutions', this)">2 Revolutions</div>
-          <div class="custom-option" data-value="3" onclick="selectOption('3', '3 Revolutions', this)">3 Revolutions</div>
+          <div class="custom-option selected" data-value="1" onclick="selectOption(1, '1 Revolution', this)">1 Revolution</div>
+          <div class="custom-option" data-value="2" onclick="selectOption(2, '2 Revolutions', this)">2 Revolutions</div>
+          <div class="custom-option" data-value="3" onclick="selectOption(3, '3 Revolutions', this)">3 Revolutions</div>
         </div>
       </div>
 
@@ -498,7 +498,7 @@
     </div>
 
     <!-- Version Indicator -->
-    <div class="version-tag">Ver 1.1.0</div>
+    <div class="version-tag">Ver 1.1.1</div>
   </div>
 
   <script>
@@ -518,8 +518,8 @@
     const logsRef = db.ref("feed_logs");
 
     const CORRECT_KEY = "ADSB";
-    let selectedRevs = "1";
-    let pendingRevs = "1";
+    let selectedRevs = 1;
+    let pendingRevs = 1;
     let currentStatus = "offline";
     let toastTimeout;
 
@@ -549,7 +549,7 @@
     }
 
     function selectOption(val, label, el) {
-      selectedRevs = val;
+      selectedRevs = parseInt(val) || 1;
       document.getElementById('selectedOptionText').innerText = label;
       
       const options = document.querySelectorAll('.custom-option');
@@ -582,13 +582,14 @@
       logListElement.innerHTML = logsArray.map(log => `
         <li class="log-item">
           <span>${log.time}</span>
-          <strong>${log.revs || 1} Rev${(log.revs || 1) > 1 ? 's' : ''}</strong>
+          <strong>${parseInt(log.revs) || 1} Rev${(parseInt(log.revs) || 1) > 1 ? 's' : ''}</strong>
         </li>
       `).join('');
     });
 
     function promptDispense() {
-      pendingRevs = selectedRevs;
+      // Sync pendingRevs directly from selectedRevs as an integer
+      pendingRevs = parseInt(selectedRevs) || 1;
 
       // OFFLINE MODE: Skip modal & skip Firebase completely
       if (currentStatus === 'offline') {
@@ -647,10 +648,12 @@
       };
       const pstTimeString = now.toLocaleString('en-US', options);
 
-      // Write revolution count to Firebase for PCB to read
+      const numRevs = parseInt(pendingRevs) || 1;
+
+      // Write revolution count as integer to Firebase
       logsRef.push({
         time: pstTimeString,
-        revs: parseInt(pendingRevs),
+        revs: numRevs,
         timestamp: firebase.database.ServerValue.TIMESTAMP
       });
 
@@ -668,7 +671,7 @@
         }
       });
 
-      const alertMessage = `${pendingRevs} revolution${pendingRevs > 1 ? 's' : ''} dispensed`;
+      const alertMessage = `${numRevs} revolution${numRevs > 1 ? 's' : ''} dispensed`;
       showToast(alertMessage);
     }
 
