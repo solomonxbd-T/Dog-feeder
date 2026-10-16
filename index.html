@@ -498,7 +498,7 @@
     </div>
 
     <!-- Version Indicator -->
-    <div class="version-tag">Ver 1.1.1</div>
+    <div class="version-tag">Ver 1.2.0</div>
   </div>
 
   <script>
@@ -528,7 +528,6 @@
       currentStatus = mode;
       const badge = document.getElementById("statusBadge");
 
-      // Reset Active Button States
       document.getElementById("btnOffline").classList.remove("active");
       document.getElementById("btnOnline").classList.remove("active");
 
@@ -588,17 +587,21 @@
     });
 
     function promptDispense() {
-      // Sync pendingRevs directly from selectedRevs as an integer
-      pendingRevs = parseInt(selectedRevs) || 1;
+      // Force read selected revolution value right at click time
+      const selectedEl = document.querySelector('.custom-option.selected');
+      if (selectedEl) {
+        selectedRevs = parseInt(selectedEl.getAttribute('data-value')) || 1;
+      }
+      pendingRevs = selectedRevs;
 
-      // OFFLINE MODE: Skip modal & skip Firebase completely
+      // OFFLINE MODE
       if (currentStatus === 'offline') {
         const revLabel = `${pendingRevs} revolution${pendingRevs > 1 ? 's' : ''} dispensed (Offline Mode)`;
         showToast(revLabel);
         return;
       }
 
-      // ONLINE MODE: Open passcode modal
+      // ONLINE MODE
       document.getElementById('modalText').innerText = `Dispensing ${pendingRevs} Rev${pendingRevs > 1 ? 's' : ''}. Enter key:`;
       document.getElementById('passkeyInput').value = '';
       document.getElementById('errorMsg').style.display = 'none';
@@ -650,14 +653,14 @@
 
       const numRevs = parseInt(pendingRevs) || 1;
 
-      // Write revolution count as integer to Firebase
+      // Send revs as clean integer to Firebase
       logsRef.push({
         time: pstTimeString,
         revs: numRevs,
         timestamp: firebase.database.ServerValue.TIMESTAMP
       });
 
-      // Maintain maximum 5 entries in database
+      // Keep maximum 5 entries in database
       logsRef.once("value", (snapshot) => {
         const total = snapshot.numChildren();
         if (total > 5) {
