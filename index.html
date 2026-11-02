@@ -1,595 +1,209 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Smart Pet Feeder Dashboard</title>
-  <style>
-    :root {
-      --primary-color: #475569;
-      --primary-hover: #334155;
-      --bg-color: #f1f5f9;
-      --card-bg: #ffffff;
-      --text-main: #0f172a;
-      --text-muted: #64748b;
-      --border-color: #cbd5e1;
-      --success-bg: #f0fdf4;
-      --success-border: #bbf7d0;
-      --success-text: #166534;
-      --error-text: #dc2626;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-main);
-      margin: 0;
-      padding: 24px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      box-sizing: border-box;
-    }
-
-    .dashboard-card {
-      position: relative;
-      background-color: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 16px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
-      padding: 40px 36px 48px 36px;
-      max-width: 460px;
-      width: 100%;
-      text-align: center;
-      overflow: hidden;
-      transition: border-color 0.3s ease;
-    }
-
-    h1 {
-      font-size: 1.8rem;
-      margin-top: 0;
-      margin-bottom: 10px;
-      color: var(--text-main);
-      font-weight: 700;
-    }
-
-    .status-badge {
-      display: inline-block;
-      padding: 6px 16px;
-      border-radius: 20px;
-      font-size: 0.88rem;
-      font-weight: 600;
-      margin-bottom: 20px;
-      letter-spacing: 0.5px;
-      transition: all 0.3s ease;
-    }
-
-    .status-offline { background-color: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; }
-    .status-online { background-color: #dcfce7; color: #166534; border: 1px solid #86efac; }
-
-    .mode-selector {
-      display: flex;
-      justify-content: center;
-      gap: 6px;
-      margin-bottom: 24px;
-      background-color: #f8fafc;
-      padding: 4px;
-      border-radius: 10px;
-      border: 1px solid var(--border-color);
-    }
-
-    .mode-btn {
-      flex: 1;
-      padding: 6px 10px;
-      border: none;
-      border-radius: 6px;
-      background: transparent;
-      color: var(--text-muted);
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .mode-btn.active {
-      background-color: var(--card-bg);
-      color: var(--text-main);
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-    }
-
-    .toast-banner {
-      position: absolute;
-      top: -60px;
-      left: 36px;
-      right: 36px;
-      background-color: var(--success-bg);
-      border: 1px solid var(--success-border);
-      color: var(--success-text);
-      padding: 12px 16px;
-      border-radius: 10px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      z-index: 20;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-      transition: top 0.4s ease-in-out, opacity 0.35s ease;
-      opacity: 0;
-    }
-
-    .toast-banner.show {
-      top: 16px;
-      opacity: 1;
-    }
-
-    .control-group {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      text-align: left;
-    }
-
-    .select-label {
-      font-size: 1rem;
-      color: var(--text-muted);
-      font-weight: 600;
-    }
-
-    .custom-select-wrapper {
-      position: relative;
-      user-select: none;
-    }
-
-    .custom-select-trigger {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      width: 100%;
-      padding: 14px 16px;
-      border: 1.5px solid var(--border-color);
-      border-radius: 10px;
-      background-color: #f8fafc;
-      color: var(--text-main);
-      font-size: 1.05rem;
-      font-weight: 500;
-      cursor: pointer;
-      box-sizing: border-box;
-      transition: border-color 0.2s ease, background-color 0.2s ease;
-    }
-
-    .custom-select-trigger:hover {
-      background-color: #f1f5f9;
-      border-color: #94a3b8;
-    }
-
-    .arrow {
-      width: 10px;
-      height: 10px;
-      border-right: 2px solid var(--text-muted);
-      border-bottom: 2px solid var(--text-muted);
-      transform: rotate(45deg);
-      transition: transform 0.3s ease;
-      margin-right: 4px;
-    }
-
-    .custom-select-wrapper.open .arrow {
-      transform: rotate(-135deg);
-    }
-
-    .custom-options {
-      position: absolute;
-      top: calc(100% + 6px);
-      left: 0;
-      right: 0;
-      background-color: #ffffff;
-      border: 1.5px solid var(--border-color);
-      border-radius: 10px;
-      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
-      z-index: 15;
-      opacity: 0;
-      visibility: hidden;
-      transform: translateY(-8px);
-      transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s;
-      overflow: hidden;
-    }
-
-    .custom-select-wrapper.open .custom-options {
-      opacity: 1;
-      visibility: visible;
-      transform: translateY(0);
-    }
-
-    .custom-option {
-      padding: 12px 16px;
-      font-size: 1rem;
-      color: var(--text-main);
-      cursor: pointer;
-      transition: background-color 0.15s ease, color 0.15s ease;
-    }
-
-    .custom-option:hover {
-      background-color: #f1f5f9;
-      color: var(--primary-color);
-    }
-
-    .custom-option.selected {
-      background-color: #e2e8f0;
-      font-weight: 600;
-    }
-
-    .dispense-button {
-      background-color: var(--primary-color);
-      color: #ffffff;
-      border: none;
-      border-radius: 10px;
-      padding: 16px;
-      font-size: 1.15rem;
-      font-weight: 600;
-      width: 100%;
-      cursor: pointer;
-      transition: background-color 0.2s ease, transform 0.1s ease;
-      margin-top: 6px;
-    }
-
-    .dispense-button:hover { background-color: var(--primary-hover); }
-    .dispense-button:active { transform: scale(0.99); }
-
-    .secondary-button {
-      background-color: transparent;
-      color: var(--text-muted);
-      border: 1.5px solid var(--border-color);
-      border-radius: 10px;
-      padding: 12px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      width: 100%;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .secondary-button:hover {
-      background-color: #f8fafc;
-      color: var(--text-main);
-    }
-
-    .log-container {
-      display: none;
-      text-align: left;
-    }
-
-    .log-list {
-      list-style: none;
-      padding: 0;
-      margin: 18px 0;
-      max-height: 280px;
-      overflow-y: auto;
-      border: 1.5px solid var(--border-color);
-      border-radius: 10px;
-      background-color: #f8fafc;
-    }
-
-    .log-item {
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border-color);
-      font-size: 0.95rem;
-      display: flex;
-      justify-content: space-between;
-      color: var(--text-main);
-    }
-
-    .log-item:last-child { border-bottom: none; }
-    .log-empty { padding: 20px; text-align: center; color: var(--text-muted); font-size: 0.95rem; }
-
-    .modal-overlay {
-      display: none;
-      position: absolute;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background-color: rgba(15, 23, 42, 0.4);
-      border-radius: 16px;
-      justify-content: center;
-      align-items: center;
-      z-index: 25;
-      animation: fadeIn 0.25s ease-in-out;
-    }
-
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-    .modal-box {
-      background-color: #ffffff;
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 24px;
-      margin: 20px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-      text-align: center;
-      width: 100%;
-      max-width: 320px;
-    }
-
-    .shake { animation: modalShake 0.35s ease-in-out; }
-    @keyframes modalShake {
-      0% { transform: translateX(0); }
-      20% { transform: translateX(-8px); }
-      40% { transform: translateX(8px); }
-      60% { transform: translateX(-5px); }
-      80% { transform: translateX(5px); }
-      100% { transform: translateX(0); }
-    }
-
-    .modal-title { font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin-bottom: 8px; }
-    .modal-text { font-size: 0.95rem; color: var(--text-muted); margin-bottom: 16px; }
-
-    .key-input {
-      width: 100%;
-      padding: 10px;
-      border: 1.5px solid var(--border-color);
-      border-radius: 8px;
-      font-size: 1.1rem;
-      text-align: center;
-      letter-spacing: 4px;
-      text-transform: uppercase;
-      font-weight: 700;
-      box-sizing: border-box;
-      margin-bottom: 8px;
-      outline: none;
-    }
-
-    .key-input:focus { border-color: var(--primary-color); }
-    .error-msg { color: var(--error-text); font-size: 0.85rem; font-weight: 600; margin-bottom: 12px; display: none; }
-
-    .modal-actions { display: flex; gap: 10px; }
-    .btn-confirm { background-color: var(--primary-color); color: white; border: none; border-radius: 8px; padding: 10px 16px; font-size: 0.95rem; font-weight: 600; flex: 1; cursor: pointer; }
-    .btn-confirm:hover { background-color: var(--primary-hover); }
-    .btn-cancel { background-color: #f1f5f9; color: var(--text-muted); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 16px; font-size: 0.95rem; font-weight: 600; flex: 1; cursor: pointer; }
-    .btn-cancel:hover { background-color: #e2e8f0; }
-    .version-tag { position: absolute; bottom: 14px; left: 18px; font-size: 0.8rem; color: var(--text-muted); font-weight: 500; }
-  </style>
-
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dog Feeder</title>
+<style>
+  :root{--bg:#2b3138;--card:#363d46;--line:#4a535e;--text:#e3e7eb;--muted:#9aa5b1;--accent:#7f9bb3;--ok:#7fae93;--warn:#c9a46b}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,sans-serif;display:flex;justify-content:center;padding:24px}
+  .wrap{width:100%;max-width:420px}
+  h1{font-size:1.3rem;font-weight:600;margin:0 0 16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+  .label{color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+  .toggle{display:flex;background:var(--bg);border-radius:10px;padding:4px}
+  .toggle button{flex:1;padding:10px;border:0;border-radius:8px;background:transparent;color:var(--muted);font-size:.95rem;cursor:pointer}
+  .toggle button.active{background:var(--accent);color:#14181c;font-weight:600}
+  .portions{display:flex;gap:10px}
+  .portions button{flex:1;padding:14px 0;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:1.1rem;cursor:pointer}
+  .portions button.active{border-color:var(--accent);background:var(--accent);color:#14181c;font-weight:700}
+  .dispense{width:100%;padding:16px;border:0;border-radius:12px;background:var(--ok);color:#14181c;font-size:1.05rem;font-weight:700;cursor:pointer}
+  .dispense:disabled{opacity:.5}
+  .status{margin-top:10px;font-size:.85rem;color:var(--muted);min-height:1.2em}
+  .log{list-style:none;margin:0;padding:0}
+  .log li{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line);font-size:.92rem}
+  .log li:last-child{border-bottom:0}
+  .log .r{color:var(--muted)}
+  .log .local{color:var(--warn)}
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:24px}
+  .overlay.show{display:flex}
+  .modal{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;width:100%;max-width:320px}
+  .modal h2{margin:0 0 12px;font-size:1.05rem}
+  .modal input{width:100%;padding:12px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:1rem;margin-bottom:8px;text-transform:uppercase}
+  .err{color:#d98a8a;font-size:.82rem;min-height:1.1em;margin-bottom:8px}
+  .row{display:flex;gap:10px}
+  .row button{flex:1;padding:11px;border-radius:8px;border:0;font-size:.95rem;cursor:pointer}
+  .cancel{background:var(--line);color:var(--text)}
+  .confirm{background:var(--accent);color:#14181c;font-weight:600}
+</style>
 </head>
 <body>
+<div class="wrap">
+  <h1>🐶 Dog Feeder</h1>
 
-  <div class="dashboard-card" id="mainCard">
-    <div id="toastBanner" class="toast-banner"></div>
-
-    <h1>🐾 Smart Pet Feeder</h1>
-    <div class="status-badge status-offline" id="statusBadge">🔴 Offline Mode</div>
-
-    <div class="mode-selector">
-      <button class="mode-btn active" id="btnOffline" onclick="setStatusMode('offline')">Offline</button>
-      <button class="mode-btn" id="btnOnline" onclick="setStatusMode('online')">Online</button>
+  <div class="card">
+    <div class="label">Mode</div>
+    <div class="toggle">
+      <button id="modeOnline" class="active">Online</button>
+      <button id="modeOffline">Offline</button>
     </div>
-
-    <div id="controlsView" class="control-group">
-      <label class="select-label">Portion Size (Revolutions):</label>
-
-      <div class="custom-select-wrapper" id="customSelect">
-        <div class="custom-select-trigger" onclick="toggleDropdown()">
-          <span id="selectedOptionText">1 Revolution</span>
-          <div class="arrow"></div>
-        </div>
-        <div class="custom-options">
-          <div class="custom-option selected" data-value="1" onclick="selectOption(1, '1 Revolution', this)">1 Revolution</div>
-          <div class="custom-option" data-value="2" onclick="selectOption(2, '2 Revolutions', this)">2 Revolutions</div>
-          <div class="custom-option" data-value="3" onclick="selectOption(3, '3 Revolutions', this)">3 Revolutions</div>
-        </div>
-      </div>
-
-      <button class="dispense-button" onclick="promptDispense()">Dispense</button>
-      <button class="secondary-button" onclick="showLogView()">Feed Log</button>
-    </div>
-
-    <div id="logView" class="log-container">
-      <label class="select-label">Recent Dispense Activity (PST):</label>
-      <ul id="logList" class="log-list">
-        <li class="log-empty">Loading logs from database...</li>
-      </ul>
-      <button class="secondary-button" onclick="showControlsView()">← Back to Controls</button>
-    </div>
-
-    <div id="confirmModal" class="modal-overlay">
-      <div class="modal-box" id="modalBox">
-        <div class="modal-title">Security Key Required</div>
-        <div class="modal-text" id="modalText">Enter security key to dispense:</div>
-        
-        <input type="text" id="passkeyInput" class="key-input" maxlength="4" placeholder="____" autocomplete="off" onkeyup="handleKeyPress(event)">
-        <div id="errorMsg" class="error-msg">Incorrect key. Try again.</div>
-
-        <div class="modal-actions">
-          <button class="btn-cancel" onclick="closeModal()">Cancel</button>
-          <button class="btn-confirm" onclick="verifyAndDispense()">Dispense</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="version-tag">Ver 2.0.0</div>
   </div>
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyCwRSWrUoNP7JrGyqEVspQaxKPn8zuib1I",
-      authDomain: "dog-feeder-63c72.firebaseapp.com",
-      databaseURL: "https://dog-feeder-63c72-default-rtdb.firebaseio.com",
-      projectId: "dog-feeder-63c72",
-      storageBucket: "dog-feeder-63c72.firebasestorage.app",
-      messagingSenderId: "804213473474",
-      appId: "1:804213473474:web:e57bbd74bddd998bc73b5b"
+  <div class="card">
+    <div class="label">Portion (revolutions)</div>
+    <div class="portions" id="portions">
+      <button data-revs="1" class="active">1</button>
+      <button data-revs="2">2</button>
+      <button data-revs="3">3</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <button class="dispense" id="dispenseBtn">Dispense</button>
+    <div class="status" id="status"></div>
+  </div>
+
+  <div class="card">
+    <div class="label">Feed Log (last 5)</div>
+    <ul class="log" id="log"><li><span class="r">No entries yet</span></li></ul>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2>Enter passcode</h2>
+    <input id="pass" type="password" autocomplete="off" placeholder="Passcode">
+    <div class="err" id="err"></div>
+    <div class="row">
+      <button class="cancel" id="cancelBtn">Cancel</button>
+      <button class="confirm" id="confirmBtn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+  firebase.initializeApp({
+    databaseURL: "https://dog-feeder-63c72-default-rtdb.firebaseio.com"
+  });
+  const db = firebase.database();
+  const logsRef = db.ref("feed_logs");
+  const MAX_LOGS = 5;
+  const PASSCODE = "ADSB";
+
+  let mode = "online";
+  let revs = 1;
+  const localLog = [];
+
+  const $ = id => document.getElementById(id);
+  const statusEl = $("status");
+
+  function setStatus(msg){ statusEl.textContent = msg; }
+
+  // Mode toggle
+  function setMode(m){
+    mode = m;
+    $("modeOnline").classList.toggle("active", m === "online");
+    $("modeOffline").classList.toggle("active", m === "offline");
+    setStatus(m === "online" ? "" : "Offline: nothing is sent to the feeder.");
+    renderLog();
+  }
+  $("modeOnline").onclick = () => setMode("online");
+  $("modeOffline").onclick = () => setMode("offline");
+
+  // Portion selector
+  $("portions").addEventListener("click", e => {
+    const b = e.target.closest("button");
+    if(!b) return;
+    revs = parseInt(b.dataset.revs, 10);   // always a Number
+    document.querySelectorAll("#portions button").forEach(x => x.classList.toggle("active", x === b));
+  });
+
+  // Dispense flow
+  $("dispenseBtn").onclick = () => {
+    if(mode === "offline"){
+      localLog.unshift({ time: nowString(), revs: revs });
+      localLog.length = Math.min(localLog.length, MAX_LOGS);
+      renderLog();
+      setStatus("Offline: logged locally only.");
+      return;
+    }
+    $("pass").value = ""; $("err").textContent = "";
+    $("overlay").classList.add("show");
+    $("pass").focus();
+  };
+  $("cancelBtn").onclick = () => $("overlay").classList.remove("show");
+  $("pass").addEventListener("keydown", e => { if(e.key === "Enter") submitPass(); });
+  $("confirmBtn").onclick = submitPass;
+
+  function nowString(){
+    return new Date().toLocaleString([], {month:"short", day:"numeric", hour:"numeric", minute:"2-digit"});
+  }
+
+  function submitPass(){
+    if($("pass").value.trim().toUpperCase() !== PASSCODE){
+      $("err").textContent = "Incorrect passcode";
+      return;
+    }
+    $("overlay").classList.remove("show");
+    pushFeed();
+  }
+
+  function pushFeed(){
+    const entry = {
+      time: String(nowString()),
+      revs: Number(parseInt(revs, 10)),          // explicit integer 1, 2 or 3
+      timestamp: firebase.database.ServerValue.TIMESTAMP
     };
+    $("dispenseBtn").disabled = true;
+    setStatus("Sending...");
+    logsRef.push(entry)
+      .then(() => { setStatus("Dispense sent (" + entry.revs + " rev" + (entry.revs > 1 ? "s" : "") + ")"); return trimLogs(); })
+      .catch(err => setStatus("Error: " + err.message))
+      .finally(() => setTimeout(() => { $("dispenseBtn").disabled = false; }, 1500));
+  }
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    const logsRef = db.ref("feed_logs");
-
-    const CORRECT_KEY = "ADSB";
-    let selectedRevs = 1;
-    let pendingRevs = 1;
-    let currentStatus = "offline";
-    let toastTimeout;
-
-    function setStatusMode(mode) {
-      currentStatus = mode;
-      const badge = document.getElementById("statusBadge");
-
-      document.getElementById("btnOffline").classList.remove("active");
-      document.getElementById("btnOnline").classList.remove("active");
-
-      if (mode === 'offline') {
-        document.getElementById("btnOffline").classList.add("active");
-        badge.className = "status-badge status-offline";
-        badge.innerText = "🔴 Offline Mode";
-      } else if (mode === 'online') {
-        document.getElementById("btnOnline").classList.add("active");
-        badge.className = "status-badge status-online";
-        badge.innerText = "🟢 Online Mode";
-      }
-    }
-
-    function toggleDropdown() {
-      document.getElementById('customSelect').classList.toggle('open');
-    }
-
-    function selectOption(val, label, el) {
-      selectedRevs = parseInt(val) || 1;
-      document.getElementById('selectedOptionText').innerText = label;
-      
-      const options = document.querySelectorAll('.custom-option');
-      options.forEach(opt => opt.classList.remove('selected'));
-      el.classList.add('selected');
-      
-      document.getElementById('customSelect').classList.remove('open');
-    }
-
-    window.addEventListener('click', function(e) {
-      const customSelect = document.getElementById('customSelect');
-      if (customSelect && !customSelect.contains(e.target)) {
-        customSelect.classList.remove('open');
+  // Keep at most MAX_LOGS entries (push keys sort chronologically)
+  function trimLogs(){
+    return logsRef.orderByKey().once("value").then(snap => {
+      const keys = [];
+      snap.forEach(c => { keys.push(c.key); });
+      const extra = keys.length - MAX_LOGS;
+      if(extra > 0){
+        const updates = {};
+        keys.slice(0, extra).forEach(k => { updates[k] = null; });
+        return logsRef.update(updates);
       }
     });
+  }
 
-    logsRef.limitToLast(5).on("value", (snapshot) => {
-      const logListElement = document.getElementById("logList");
-      const data = snapshot.val();
+  // Live log
+  let remote = [];
+  logsRef.orderByKey().limitToLast(MAX_LOGS).on("value", snap => {
+    remote = [];
+    snap.forEach(c => { remote.push(c.val()); });
+    remote.reverse();
+    renderLog();
+  });
 
-      if (!data) {
-        logListElement.innerHTML = '<li class="log-empty">No dispense records yet.</li>';
-        return;
-      }
-
-      const logsArray = Object.values(data).reverse();
-
-      logListElement.innerHTML = logsArray.map(log => `
-        <li class="log-item">
-          <span>${log.time}</span>
-          <strong>${parseInt(log.revs) || 1} Rev${(parseInt(log.revs) || 1) > 1 ? 's' : ''}</strong>
-        </li>
-      `).join('');
+  function renderLog(){
+    const items = mode === "online" ? remote : localLog;
+    const ul = $("log");
+    ul.innerHTML = "";
+    if(!items.length){ ul.innerHTML = '<li><span class="r">No entries yet</span></li>'; return; }
+    items.forEach(it => {
+      const li = document.createElement("li");
+      const t = document.createElement("span");
+      t.textContent = it.time;
+      const r = document.createElement("span");
+      r.className = "r" + (mode === "offline" ? " local" : "");
+      r.textContent = it.revs + " rev" + (it.revs > 1 ? "s" : "");
+      li.append(t, r);
+      ul.appendChild(li);
     });
-
-    function promptDispense() {
-      const selectedEl = document.querySelector('.custom-option.selected');
-      if (selectedEl) {
-        selectedRevs = parseInt(selectedEl.getAttribute('data-value')) || 1;
-      }
-      pendingRevs = selectedRevs;
-
-      if (currentStatus === 'offline') {
-        showToast(`${pendingRevs} revolution${pendingRevs > 1 ? 's' : ''} dispensed (Offline Mode)`);
-        return;
-      }
-
-      document.getElementById('modalText').innerText = `Dispensing ${pendingRevs} Rev${pendingRevs > 1 ? 's' : ''}. Enter key:`;
-      document.getElementById('passkeyInput').value = '';
-      document.getElementById('errorMsg').style.display = 'none';
-      document.getElementById('modalBox').classList.remove('shake');
-      document.getElementById('confirmModal').style.display = 'flex';
-      
-      setTimeout(() => {
-        document.getElementById('passkeyInput').focus();
-      }, 100);
-    }
-
-    function closeModal() {
-      document.getElementById('confirmModal').style.display = 'none';
-    }
-
-    function handleKeyPress(event) {
-      if (event.key === "Enter") {
-        verifyAndDispense();
-      }
-    }
-
-    function verifyAndDispense() {
-      const enteredKey = document.getElementById('passkeyInput').value.trim().toUpperCase();
-
-      if (enteredKey !== CORRECT_KEY) {
-        const modalBox = document.getElementById('modalBox');
-        document.getElementById('errorMsg').style.display = 'block';
-        document.getElementById('passkeyInput').value = '';
-        document.getElementById('passkeyInput').focus();
-        
-        modalBox.classList.remove('shake');
-        void modalBox.offsetWidth;
-        modalBox.classList.add('shake');
-        return;
-      }
-
-      closeModal();
-      
-      const now = new Date();
-      const options = {
-        timeZone: 'America/Los_Angeles',
-        month: 'short',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true
-      };
-      const pstTimeString = now.toLocaleString('en-US', options);
-
-      const numRevs = parseInt(pendingRevs) || 1;
-
-      logsRef.push({
-        time: pstTimeString,
-        revs: numRevs,
-        timestamp: firebase.database.ServerValue.TIMESTAMP
-      });
-
-      logsRef.once("value", (snapshot) => {
-        const total = snapshot.numChildren();
-        if (total > 5) {
-          let count = 0;
-          snapshot.forEach((child) => {
-            if (count < total - 5) {
-              logsRef.child(child.key).remove();
-            }
-            count++;
-          });
-        }
-      });
-
-      showToast(`${numRevs} revolution${numRevs > 1 ? 's' : ''} dispensed`);
-    }
-
-    function showToast(message) {
-      const toast = document.getElementById('toastBanner');
-      toast.innerText = message;
-      toast.classList.add('show');
-
-      clearTimeout(toastTimeout);
-      toastTimeout = setTimeout(() => {
-        toast.classList.remove('show');
-      }, 3000);
-    }
-
-    function showLogView() {
-      document.getElementById('controlsView').style.display = 'none';
-      document.getElementById('logView').style.display = 'block';
-    }
-
-    function showControlsView() {
-      document.getElementById('logView').style.display = 'none';
-      document.getElementById('controlsView').style.display = 'flex';
-    }
-  </script>
+  }
+</script>
 </body>
 </html>
