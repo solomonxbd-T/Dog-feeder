@@ -3,60 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dog Feeder - Login</title>
-<style>
-  :root{--bg:#2b3138;--card:#363d46;--line:#4a535e;--text:#e3e7eb;--muted:#9aa5b1;--ok:#7fae93}
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,sans-serif;display:flex;justify-content:center;padding:24px}
-  .wrap{width:100%;max-width:420px}
-  h1{font-size:1.3rem;font-weight:600;margin:0 0 16px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
-  .label{color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
-  input{width:100%;padding:12px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:1rem;margin-bottom:10px}
-  .err{color:#d98a8a;font-size:.85rem;min-height:1.2em;margin-bottom:8px}
-  button{width:100%;padding:14px;border:0;border-radius:12px;background:var(--ok);color:#14181c;font-size:1rem;font-weight:700;cursor:pointer}
-</style>
-<script>
-  // Already logged in? Skip straight to the feeder.
-  try { if (localStorage.getItem("feederAuth") === "ok") location.replace("index.html"); } catch(e) {}
-</script>
-</head>
-<body>
-<div class="wrap">
-  <h1>🐶 Dog Feeder</h1>
-  <div class="card">
-    <div class="label">Enter website password</div>
-    <input id="pw" type="password" placeholder="Password" autocomplete="current-password">
-    <div class="err" id="err"></div>
-    <button id="btn">Enter</button>
-  </div>
-</div>
-<script>
-  const SITE_PASSWORD = "ADSB";
-
-  function tryLogin(){
-    if(document.getElementById("pw").value === SITE_PASSWORD){
-      try { localStorage.setItem("feederAuth", "ok"); } catch(e) {}
-      location.replace("index.html");
-    } else {
-      document.getElementById("err").textContent = "Incorrect password";
-    }
-  }
-  document.getElementById("btn").onclick = tryLogin;
-  document.getElementById("pw").addEventListener("keydown", e => { if(e.key === "Enter") tryLogin(); });
-</script>
-</body>
-</html>
-3. index.html
-
-This is the original dashboard with the passcode popup removed, a login check added at the top, and a Sign out button.
-
-html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dog Feeder</title>
 <script>
   // Not logged in? Send to the login page.
