@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dog Feeder</title>
+<title>Pet Feeder</title>
 <script>
   // Not logged in? Send to the login page.
   try { if (localStorage.getItem("feederAuth") !== "ok") location.replace("login.html"); }
@@ -17,64 +17,69 @@
   .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
   h1{font-size:1.3rem;font-weight:600;margin:0}
   .signout{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:.8rem}
+  button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
   .label{color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
-  .toggle{display:flex;background:var(--bg);border-radius:10px;padding:4px}
-  .toggle button{flex:1;padding:10px;border:0;border-radius:8px;background:transparent;color:var(--muted);font-size:.95rem;cursor:pointer}
-  .toggle button.active{background:var(--accent);color:#14181c;font-weight:600}
-  .portions{display:flex;gap:10px}
+ 
+  .schedule{width:100%;padding:28px 16px;border:0;border-radius:12px;background:var(--accent);color:#14181c;font-size:1.3rem;font-weight:700;cursor:pointer}
+  .schedule small{display:block;margin-top:4px;font-size:.85rem;font-weight:500;opacity:.75}
+ 
+  .mdhead{display:flex;justify-content:space-between;align-items:center;width:100%;padding:0;background:none;border:0;color:var(--text);font-size:1rem;cursor:pointer;text-align:left}
+  .mdhead .chev{color:var(--muted);transition:transform .15s}
+  .mdhead[aria-expanded="true"] .chev{transform:rotate(180deg)}
+  .mdbody{display:none;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+  .mdbody.open{display:block}
+ 
+  .portions{display:flex;gap:10px;margin-bottom:14px}
   .portions button{flex:1;padding:14px 0;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:1.1rem;cursor:pointer}
   .portions button.active{border-color:var(--accent);background:var(--accent);color:#14181c;font-weight:700}
   .dispense{width:100%;padding:16px;border:0;border-radius:12px;background:var(--ok);color:#14181c;font-size:1.05rem;font-weight:700;cursor:pointer}
   .dispense:disabled{opacity:.5}
   .status{margin-top:10px;font-size:.85rem;color:var(--muted);min-height:1.2em}
+ 
   .log{list-style:none;margin:0;padding:0}
   .log li{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line);font-size:.92rem}
   .log li:last-child{border-bottom:0}
   .log .r{color:var(--muted)}
-  .log .local{color:var(--warn)}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="top">
-    <h1>🐶 Dog Feeder</h1>
+    <h1>Pet Feeder</h1>
     <button class="signout" id="signoutBtn">Sign out</button>
   </div>
-
+ 
   <div class="card">
-    <div class="label">Mode</div>
-    <div class="toggle">
-      <button id="modeOnline" class="active">Online</button>
-      <button id="modeOffline">Offline</button>
+    <button class="schedule" onclick="location.href='schedule.html'">
+      Schedule
+      <small>Set feeding times for each day</small>
+    </button>
+  </div>
+ 
+  <div class="card">
+    <button class="mdhead" id="manualToggle" aria-expanded="false" aria-controls="manualBody">
+      <span>Manual dispense</span>
+      <span class="chev">▾</span>
+    </button>
+    <div class="mdbody" id="manualBody">
+      <div class="label">Portion (revolutions)</div>
+      <div class="portions" id="portions">
+        <button data-revs="1" class="active">1</button>
+        <button data-revs="2">2</button>
+        <button data-revs="3">3</button>
+      </div>
+      <button class="dispense" id="dispenseBtn">Dispense</button>
+      <div class="status" id="status"></div>
     </div>
   </div>
-
-  <div class="card">
-    <div class="label">Portion (revolutions)</div>
-    <div class="portions" id="portions">
-      <button data-revs="1" class="active">1</button>
-      <button data-revs="2">2</button>
-      <button data-revs="3">3</button>
-    </div>
-  </div>
-
-  <div class="card">
-    <button class="dispense" id="dispenseBtn">Dispense</button>
-    <div class="status" id="status"></div>
-  </div>
-
+ 
   <div class="card">
     <div class="label">Feed Log (last 5)</div>
     <ul class="log" id="log"><li><span class="r">No entries yet</span></li></ul>
   </div>
 </div>
-
-  <div class="card">
-  <button class="dispense" style="background:var(--accent)" onclick="location.href='schedule.html'">Schedule</button>
-</div>
-
-
+ 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
@@ -84,33 +89,25 @@
   const db = firebase.database();
   const logsRef = db.ref("feed_logs");
   const MAX_LOGS = 5;
-
-  let mode = "online";
+ 
   let revs = 1;
-  const localLog = [];
   let remote = [];
-
+ 
   const $ = id => document.getElementById(id);
-  const statusEl = $("status");
-  function setStatus(msg){ statusEl.textContent = msg; }
-
+  function setStatus(msg){ $("status").textContent = msg; }
+ 
   // Sign out
   $("signoutBtn").onclick = () => {
     try { localStorage.removeItem("feederAuth"); } catch(e) {}
     location.replace("login.html");
   };
-
-  // Mode toggle
-  function setMode(m){
-    mode = m;
-    $("modeOnline").classList.toggle("active", m === "online");
-    $("modeOffline").classList.toggle("active", m === "offline");
-    setStatus(m === "online" ? "" : "Offline: nothing is sent to the feeder.");
-    renderLog();
-  }
-  $("modeOnline").onclick = () => setMode("online");
-  $("modeOffline").onclick = () => setMode("offline");
-
+ 
+  // Manual dispense dropdown
+  $("manualToggle").onclick = () => {
+    const open = $("manualBody").classList.toggle("open");
+    $("manualToggle").setAttribute("aria-expanded", open);
+  };
+ 
   // Portion selector
   $("portions").addEventListener("click", e => {
     const b = e.target.closest("button");
@@ -118,23 +115,14 @@
     revs = parseInt(b.dataset.revs, 10);
     document.querySelectorAll("#portions button").forEach(x => x.classList.toggle("active", x === b));
   });
-
+ 
   function nowString(){
     return new Date().toLocaleString([], {month:"short", day:"numeric", hour:"numeric", minute:"2-digit"});
   }
-
+ 
   // Dispense
-  $("dispenseBtn").onclick = () => {
-    if(mode === "offline"){
-      localLog.unshift({ time: nowString(), revs: revs });
-      localLog.length = Math.min(localLog.length, MAX_LOGS);
-      renderLog();
-      setStatus("Offline: logged locally only.");
-      return;
-    }
-    pushFeed();
-  };
-
+  $("dispenseBtn").onclick = pushFeed;
+ 
   function pushFeed(){
     const entry = {
       time: String(nowString()),
@@ -148,7 +136,7 @@
       .catch(err => setStatus("Error: " + err.message))
       .finally(() => setTimeout(() => { $("dispenseBtn").disabled = false; }, 1500));
   }
-
+ 
   // Keep at most MAX_LOGS entries
   function trimLogs(){
     return logsRef.orderByKey().once("value").then(snap => {
@@ -162,7 +150,7 @@
       }
     });
   }
-
+ 
   // Live log
   logsRef.orderByKey().limitToLast(MAX_LOGS).on("value", snap => {
     remote = [];
@@ -170,18 +158,17 @@
     remote.reverse();
     renderLog();
   });
-
+ 
   function renderLog(){
-    const items = mode === "online" ? remote : localLog;
     const ul = $("log");
     ul.innerHTML = "";
-    if(!items.length){ ul.innerHTML = '<li><span class="r">No entries yet</span></li>'; return; }
-    items.forEach(it => {
+    if(!remote.length){ ul.innerHTML = '<li><span class="r">No entries yet</span></li>'; return; }
+    remote.forEach(it => {
       const li = document.createElement("li");
       const t = document.createElement("span");
       t.textContent = it.time;
       const r = document.createElement("span");
-      r.className = "r" + (mode === "offline" ? " local" : "");
+      r.className = "r";
       r.textContent = it.revs + " rev" + (it.revs > 1 ? "s" : "");
       li.append(t, r);
       ul.appendChild(li);
